@@ -320,8 +320,7 @@ static void send_status_line(void) {
 // core0: native USB (XInput towards Parsec host + CDC bridge)
 //--------------------------------------------------------------------+
 void core0_main(void) {
-    /* BISECT EXPERIMENT: hardware watchdog disabled */
-    /* watchdog_enable(2000, 1); */
+    uint32_t last_core1_heartbeat = g_core1_alive_ms;
 
     tusb_rhport_init_t dev_init = {
         .role = TUSB_ROLE_DEVICE,
@@ -420,8 +419,6 @@ void core0_main(void) {
         }
 #endif
 
-        /* BISECT EXPERIMENT: core1 liveness reboot disabled */
-
         g_dbg.c0_stage = 3;
         if (!released &&
             (board_millis() - last_frame_ms) > PAD_RELEASE_TIMEOUT_MS) {
@@ -438,7 +435,13 @@ void core0_main(void) {
             g_pio_configured = true;
         }
 
-        /* watchdog_update();  BISECT EXPERIMENT disabled */
+        /* Refresh only after both cores have made progress. USB suspend and
+         * missing host reports are normal while the Switch is asleep. */
+        uint32_t core1_heartbeat = g_core1_alive_ms;
+        if (core1_heartbeat != last_core1_heartbeat) {
+            last_core1_heartbeat = core1_heartbeat;
+            watchdog_update();
+        }
     }
 }
 
@@ -603,6 +606,7 @@ int main(void) {
     mutex_init(&g_pad_mutex);
     pad_release(&g_pad);
 
+    watchdog_enable(2000, true);
     multicore_reset_core1();
     multicore_launch_core1(core1_main);
 

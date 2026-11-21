@@ -1,8 +1,8 @@
 
 #pragma once
 
-#define RP2350_USB_C  1
-#define RP2350_USB_CM 0
+#define RP2350_USB_C  0
+#define RP2350_USB_CM 1
 
 #if RP2350_USB_C
 typedef enum {

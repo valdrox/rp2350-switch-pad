@@ -22,6 +22,7 @@
 #include "powa_descriptors.h"
 #include "switch_descriptors.h"
 #include "usb_definitions.h"
+extern const string_descriptor_t *pio_string_table(void);
 
 extern const uint8_t ds4_device_descriptor[18];
 extern const uint8_t ds4_configuration_descriptor[41];
